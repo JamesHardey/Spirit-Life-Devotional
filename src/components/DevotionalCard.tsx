@@ -13,7 +13,13 @@ export function DevotionalCard({
   if (!devotional) {
     return (
       <div className="mx-5 mb-5 rounded-3xl border border-white/5 bg-surface-card p-6 text-center">
-        <p className="text-sm text-content-muted">No devotional available yet.</p>
+        <span className="mb-2 block text-3xl" aria-hidden>
+          📭
+        </span>
+        <p className="text-sm font-semibold text-content-primary">Not available yet</p>
+        <p className="mt-1 text-xs text-content-muted">
+          Today&apos;s devotional hasn&apos;t been uploaded yet — check back soon.
+        </p>
       </div>
     );
   }

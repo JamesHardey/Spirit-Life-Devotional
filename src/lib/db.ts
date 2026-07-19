@@ -111,18 +111,23 @@ export async function getDevotionalByDate(date: string): Promise<Devotional | nu
 }
 
 export async function getTodayDevotional(todayISO: string): Promise<Devotional | null> {
+  // Exact date match only — no falling back to an older devotional. If
+  // today's entry hasn't been uploaded yet (or is still a draft), the caller
+  // shows an explicit "not available yet" state instead of silently
+  // substituting a stale one.
+  const dev = await getDevotionalByDate(todayISO);
+  return dev && dev.status === "published" ? dev : null;
+}
+
+// Just the published dates (no content) — cheap enough for calendar marking.
+export async function getPublishedDevotionalDates(): Promise<string[]> {
   if (usePostgres()) {
-    // Exact match for today, else the most recent published day on/before today.
     const { rows } = await pool().query(
-      "select to_char(date,'YYYY-MM-DD') as date, year, title, key_verse, text, message, prayer_points, prayer_families, status, created_at, updated_at from public.devotionals where status='published' and date<=$1 order by date desc limit 1",
-      [todayISO]
+      "select to_char(date,'YYYY-MM-DD') as date from public.devotionals where status='published' order by date"
     );
-    return rows[0] ? rowToDevotional(rows[0]) : null;
+    return rows.map((r: { date: string }) => r.date);
   }
-  const published = await getPublishedDevotionals();
-  const exact = published.find((d) => d.date === todayISO);
-  if (exact) return exact;
-  return published.find((d) => d.date <= todayISO) ?? null;
+  return (await getPublishedDevotionals()).map((d) => d.date);
 }
 
 export async function saveDevotional(dev: Devotional): Promise<void> {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import mammoth from "mammoth";
 import { isAdminAuthed } from "@/lib/auth";
-import { parseDevotionalDocx } from "@/lib/docxImport";
+import { detectDocxFormat, parseDailyRechargeDocx, parseDevotionalDocx } from "@/lib/docxImport";
 import { saveDevotional } from "@/lib/db";
 import type { Devotional } from "@/lib/types";
 
@@ -9,9 +10,14 @@ export const runtime = "nodejs";
 
 // POST /api/devotionals/bulk  (multipart form)
 //   file    : .docx of the devotional book (required)
-//   year    : e.g. 2026 (required — date headings carry no year)
+//   year    : e.g. 2026 (only required for the "Daily Revelation" format,
+//             whose date headings carry no year; ignored for "Daily Recharge",
+//             whose headings already include the year)
 //   status  : "published" | "draft" (default published)
 //   dryRun  : "1" to preview without saving
+//
+// The format ("daily-revelation" vs "daily-recharge") is auto-detected from
+// the document's own heading style so the admin doesn't have to pick one.
 export async function POST(req: NextRequest) {
   if (!(await isAdminAuthed())) {
     return NextResponse.json({ status: "error", message: "Unauthorized" }, { status: 401 });
@@ -25,7 +31,7 @@ export async function POST(req: NextRequest) {
   }
 
   const file = form.get("file");
-  const year = parseInt(String(form.get("year") || ""), 10);
+  const yearRaw = parseInt(String(form.get("year") || ""), 10);
   const status = form.get("status") === "draft" ? "draft" : "published";
   const dryRun = form.get("dryRun") === "1";
 
@@ -36,18 +42,43 @@ export async function POST(req: NextRequest) {
   if (!name.toLowerCase().endsWith(".docx")) {
     return NextResponse.json({ status: "error", message: "Please upload a .docx file" }, { status: 400 });
   }
-  if (!year || year < 2000 || year > 2100) {
-    return NextResponse.json({ status: "error", message: "Provide a valid year (e.g. 2026)" }, { status: 400 });
-  }
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  let parsed;
+  let format: "daily-revelation" | "daily-recharge" | "unknown";
   try {
-    parsed = await parseDevotionalDocx(buffer, year, status);
+    const { value: raw } = await mammoth.extractRawText({ buffer });
+    format = detectDocxFormat(raw);
   } catch (err) {
     return NextResponse.json(
       { status: "error", message: `Could not read the document: ${(err as Error).message}` },
+      { status: 400 }
+    );
+  }
+
+  if (format === "unknown") {
+    return NextResponse.json(
+      { status: "error", message: "Could not recognize this document's devotional format." },
+      { status: 400 }
+    );
+  }
+
+  if (format === "daily-revelation" && (!yearRaw || yearRaw < 2000 || yearRaw > 2100)) {
+    return NextResponse.json(
+      { status: "error", message: "This format needs a valid year (e.g. 2026) — its date headings don't include one." },
+      { status: 400 }
+    );
+  }
+
+  let parsed;
+  try {
+    parsed =
+      format === "daily-recharge"
+        ? await parseDailyRechargeDocx(buffer, status)
+        : await parseDevotionalDocx(buffer, yearRaw, status);
+  } catch (err) {
+    return NextResponse.json(
+      { status: "error", message: `Could not parse the document: ${(err as Error).message}` },
       { status: 400 }
     );
   }
@@ -62,6 +93,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       status: "success",
       dryRun: true,
+      format,
       parsed: parsed.devotionals.length,
       totalDays: parsed.totalBlocks,
       issues: parsed.issues,
@@ -93,6 +125,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     status: "success",
+    format,
     imported,
     totalDays: parsed.totalBlocks,
     issues: parsed.issues,

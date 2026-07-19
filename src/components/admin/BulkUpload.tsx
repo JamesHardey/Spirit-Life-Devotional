@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 interface BulkResult {
   status: string;
   dryRun?: boolean;
+  format?: "daily-revelation" | "daily-recharge";
   parsed?: number;
   imported?: number;
   totalDays?: number;
@@ -14,7 +15,13 @@ interface BulkResult {
   message?: string;
 }
 
-// Bulk-import devotionals from a .docx written in the "Daily Revelation" format.
+const FORMAT_LABEL: Record<string, string> = {
+  "daily-revelation": "Daily Revelation",
+  "daily-recharge": "Daily Recharge",
+};
+
+// Bulk-import devotionals from a .docx — format ("Daily Revelation" or
+// "Daily Recharge") is auto-detected server-side.
 // Flow: pick file → Preview (dry run) → Import.
 export function BulkUpload({ onImported }: { onImported: () => void }) {
   const router = useRouter();
@@ -67,16 +74,18 @@ export function BulkUpload({ onImported }: { onImported: () => void }) {
     <div className="mt-6 rounded-3xl border border-white/5 bg-surface-card p-5">
       <h2 className="font-serif text-lg font-bold text-content-primary">Bulk upload (Word)</h2>
       <p className="mt-1 text-sm text-content-secondary">
-        Upload a whole year in one <code>.docx</code>. Each day should follow the template:
-        a <em>MONTH DAY</em> heading, the title, then <code>Text:</code>, <code>Key Verse:</code>,
-        the message, <code>Prayer Point:</code>, and <code>Pray for the following Families:</code>.
+        Upload a devotional book as one <code>.docx</code>. The format is detected
+        automatically — either "Daily Revelation" style (<em>MONTH DAY, Weekday</em> heading with{" "}
+        <code>Text:</code> / <code>Key Verse:</code> / <code>Prayer Point:</code> labels) or
+        "Daily Recharge" style (<em>ORDINAL DAY MONTH YEAR</em> heading with{" "}
+        <code>SCRIPTURE READING</code> / <code>DEVOTIONAL THOUGHT</code> / <code>PRAYER</code> sections).
       </p>
       <a
         href="/templates/SpiritLife-Devotional-Bulk-Template.docx"
         className="mt-2 inline-block text-sm font-semibold text-brand-purple-400 underline"
         download
       >
-        ↓ Download the Word template
+        ↓ Download the Daily Revelation template
       </a>
 
       <div className="mt-4 space-y-3">
@@ -84,7 +93,9 @@ export function BulkUpload({ onImported }: { onImported: () => void }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs text-content-secondary">Year</label>
+            <label className="mb-1 block text-xs text-content-secondary">
+              Year <span className="text-content-muted">(Daily Revelation only)</span>
+            </label>
             <input
               type="number"
               value={year}
@@ -128,6 +139,11 @@ export function BulkUpload({ onImported }: { onImported: () => void }) {
 
         {result && (
           <div className="rounded-xl bg-surface-input/60 p-3 text-sm">
+            {result.format && (
+              <p className="mb-1 text-xs uppercase tracking-wide text-content-muted">
+                Detected format: {FORMAT_LABEL[result.format] ?? result.format}
+              </p>
+            )}
             {result.dryRun ? (
               <p className="font-semibold text-brand-purple-300">
                 Preview: found {result.parsed} devotionals across {result.totalDays} day headings.
