@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+  max-width: 100%;
+  /* The app shell owns scrolling — the page body itself never scrolls, so the
+     header stays put like a native app bar. */
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  background-color: theme("colors.surface.dark");
+  color: theme("colors.content.primary");
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── App shell ──────────────────────────────────────────────────────────────
+   Vertical flex: fixed header on top, scrollable content filling the rest. */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background-image: radial-gradient(
+      120% 60% at 50% 0%,
+      rgba(124, 58, 237, 0.18) 0%,
+      rgba(15, 10, 30, 0) 60%
+    ),
+    linear-gradient(180deg, #0f0a1e 0%, #0f0a1e 100%);
+}
+
+.app-header {
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 20;
+  padding-top: env(safe-area-inset-top);
+  background-color: rgba(15, 10, 30, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.app-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s ease both;
+}

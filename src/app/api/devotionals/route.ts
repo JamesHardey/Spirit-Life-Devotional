@@ -1,0 +1,65 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getAllDevotionals, getPublishedDevotionals, saveDevotional } from "@/lib/db";
+import { isAdminAuthed } from "@/lib/auth";
+import { isValidISODate } from "@/lib/date";
+import type { Devotional, DevotionalInput } from "@/lib/types";
+
+// GET /api/devotionals            → published devotionals (public)
+// GET /api/devotionals?all=1      → every devotional incl. drafts (admin only)
+export async function GET(req: NextRequest) {
+  const wantsAll = req.nextUrl.searchParams.get("all") === "1";
+  if (wantsAll) {
+    if (!(await isAdminAuthed())) {
+      return NextResponse.json({ status: "error", message: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ status: "success", data: await getAllDevotionals() });
+  }
+  return NextResponse.json({ status: "success", data: await getPublishedDevotionals() });
+}
+
+// POST /api/devotionals  → create or upsert a devotional (admin only)
+export async function POST(req: NextRequest) {
+  if (!(await isAdminAuthed())) {
+    return NextResponse.json({ status: "error", message: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: DevotionalInput;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ status: "error", message: "Invalid JSON" }, { status: 400 });
+  }
+
+  const errors = validate(body);
+  if (errors.length) {
+    return NextResponse.json({ status: "error", message: errors.join("; ") }, { status: 400 });
+  }
+
+  const now = new Date().toISOString();
+  const devotional: Devotional = {
+    id: body.date, // date is the natural unique id (one per day)
+    date: body.date,
+    year: Number(body.date.slice(0, 4)),
+    title: body.title.trim(),
+    keyVerse: body.keyVerse.trim(),
+    text: body.text.trim(),
+    message: body.message.trim(),
+    prayerPoints: (body.prayerPoints || []).map((p) => p.trim()).filter(Boolean),
+    prayerFamilies: (body.prayerFamilies || []).map((p) => p.trim()).filter(Boolean),
+    status: body.status === "draft" ? "draft" : "published",
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await saveDevotional(devotional);
+  return NextResponse.json({ status: "success", data: devotional }, { status: 201 });
+}
+
+function validate(b: DevotionalInput): string[] {
+  const errors: string[] = [];
+  if (!b?.date || !isValidISODate(b.date)) errors.push("Valid date (YYYY-MM-DD) is required");
+  if (!b?.title?.trim()) errors.push("Title is required");
+  if (!b?.keyVerse?.trim()) errors.push("Key verse is required");
+  if (!b?.message?.trim()) errors.push("Message is required");
+  return errors;
+}
