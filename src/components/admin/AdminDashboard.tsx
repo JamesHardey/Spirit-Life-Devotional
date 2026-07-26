@@ -13,6 +13,7 @@ const EMPTY = {
   keyVerse: "",
   text: "",
   message: "",
+  confession: "",
   prayerPoints: "",
   prayerFamilies: "",
   status: "published" as "published" | "draft",
@@ -27,6 +28,7 @@ function toForm(d: Devotional): FormState {
     keyVerse: d.keyVerse,
     text: d.text,
     message: d.message,
+    confession: (d.confession ?? []).join("\n"),
     prayerPoints: d.prayerPoints.join("\n"),
     prayerFamilies: (d.prayerFamilies ?? []).join("\n"),
     status: d.status,
@@ -46,6 +48,9 @@ export function AdminDashboard({
   const [editing, setEditing] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [notifying, setNotifying] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [deletingDate, setDeletingDate] = useState<string | null>(null);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -73,6 +78,7 @@ export function AdminDashboard({
       keyVerse: form.keyVerse,
       text: form.text,
       message: form.message,
+      confession: form.confession.split("\n").map((s) => s.trim()).filter(Boolean),
       prayerPoints: form.prayerPoints.split("\n").map((s) => s.trim()).filter(Boolean),
       prayerFamilies: form.prayerFamilies.split("\n").map((s) => s.trim()).filter(Boolean),
       status: form.status,
@@ -103,7 +109,9 @@ export function AdminDashboard({
 
   const remove = async (date: string) => {
     if (!confirm(`Delete the devotional for ${date}?`)) return;
+    setDeletingDate(date);
     const res = await fetch(`/api/devotionals/${date}`, { method: "DELETE" });
+    setDeletingDate(null);
     if (res.ok) {
       await refresh();
       router.refresh();
@@ -112,6 +120,8 @@ export function AdminDashboard({
   };
 
   const notify = async () => {
+    setNotifying(true);
+    setMsg(null);
     const latest = devotionals.find((d) => d.status === "published");
     const res = await fetch("/api/notify", {
       method: "POST",
@@ -123,6 +133,7 @@ export function AdminDashboard({
       }),
     });
     const data = await res.json().catch(() => ({}));
+    setNotifying(false);
     if (res.ok) {
       setMsg({ kind: "ok", text: `Notification sent to ${data.sent}/${data.total} devices.` });
     } else {
@@ -131,6 +142,7 @@ export function AdminDashboard({
   };
 
   const logout = async () => {
+    setLoggingOut(true);
     await fetch("/api/auth", { method: "DELETE" });
     router.refresh();
   };
@@ -149,8 +161,12 @@ export function AdminDashboard({
           <Link href="/" className="text-sm text-content-secondary">
             View app
           </Link>
-          <button onClick={logout} className="text-sm text-brand-flame-400">
-            Log out
+          <button
+            onClick={logout}
+            disabled={loggingOut}
+            className="text-sm text-brand-flame-400 disabled:opacity-50"
+          >
+            {loggingOut ? "Logging out…" : "Log out"}
           </button>
         </div>
       </div>
@@ -248,6 +264,19 @@ export function AdminDashboard({
 
         <div>
           <label className="mb-1 block text-xs text-content-secondary">
+            Confession (one per line, optional — shown before Prayer Points)
+          </label>
+          <textarea
+            value={form.confession}
+            onChange={(e) => set("confession", e.target.value)}
+            rows={4}
+            placeholder={"I declare that…\nBy the grace of God, I…"}
+            className={inputCls}
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs text-content-secondary">
             Prayer Points (one per line)
           </label>
           <textarea
@@ -305,10 +334,10 @@ export function AdminDashboard({
         )}
         <button
           onClick={notify}
-          disabled={!pushConfigured}
+          disabled={!pushConfigured || notifying}
           className="mt-3 rounded-xl bg-brand-flame-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
         >
-          Send notification
+          {notifying ? "Sending…" : "Send notification"}
         </button>
       </div>
 
@@ -338,11 +367,19 @@ export function AdminDashboard({
                 <p className="text-xs text-content-muted">{formatDateLong(d.date)}</p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <button onClick={() => edit(d)} className="text-sm text-brand-purple-400">
+                <button
+                  onClick={() => edit(d)}
+                  disabled={deletingDate === d.date}
+                  className="text-sm text-brand-purple-400 disabled:opacity-50"
+                >
                   Edit
                 </button>
-                <button onClick={() => remove(d.date)} className="text-sm text-brand-flame-400">
-                  Delete
+                <button
+                  onClick={() => remove(d.date)}
+                  disabled={deletingDate === d.date}
+                  className="text-sm text-brand-flame-400 disabled:opacity-50"
+                >
+                  {deletingDate === d.date ? "Deleting…" : "Delete"}
                 </button>
               </div>
             </div>

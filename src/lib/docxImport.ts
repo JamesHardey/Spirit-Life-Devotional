@@ -322,11 +322,6 @@ export async function parseDailyRechargeDocx(
       message += `${message ? "\n\n" : ""}Further Study: ${furtherStudyLines.join(" ")}`;
     }
 
-    const allPrayerPoints = [
-      ...prayerPoints,
-      ...confessionLines.map((l) => `(Confession) ${l}`),
-    ];
-
     if (!title) {
       issues.push(`${date} — missing title, skipped`);
       continue;
@@ -347,7 +342,8 @@ export async function parseDailyRechargeDocx(
       keyVerse,
       text,
       message,
-      prayerPoints: allPrayerPoints,
+      confession: confessionLines,
+      prayerPoints,
       prayerFamilies: [],
       status: defaultStatus,
     });

@@ -41,6 +41,7 @@ function rowToDevotional(r: any): Devotional {
     keyVerse: r.key_verse ?? "",
     text: r.text ?? "",
     message: r.message ?? "",
+    confession: r.confession ?? [],
     prayerPoints: r.prayer_points ?? [],
     prayerFamilies: r.prayer_families ?? [],
     status: r.status,
@@ -80,7 +81,7 @@ async function writeJSON(file: string, data: unknown): Promise<void> {
 export async function getAllDevotionals(): Promise<Devotional[]> {
   if (usePostgres()) {
     const { rows } = await pool().query(
-      "select to_char(date,'YYYY-MM-DD') as date, year, title, key_verse, text, message, prayer_points, prayer_families, status, created_at, updated_at from public.devotionals order by date desc"
+      "select to_char(date,'YYYY-MM-DD') as date, year, title, key_verse, text, message, confession, prayer_points, prayer_families, status, created_at, updated_at from public.devotionals order by date desc"
     );
     return rows.map(rowToDevotional);
   }
@@ -91,7 +92,7 @@ export async function getAllDevotionals(): Promise<Devotional[]> {
 export async function getPublishedDevotionals(): Promise<Devotional[]> {
   if (usePostgres()) {
     const { rows } = await pool().query(
-      "select to_char(date,'YYYY-MM-DD') as date, year, title, key_verse, text, message, prayer_points, prayer_families, status, created_at, updated_at from public.devotionals where status='published' order by date desc"
+      "select to_char(date,'YYYY-MM-DD') as date, year, title, key_verse, text, message, confession, prayer_points, prayer_families, status, created_at, updated_at from public.devotionals where status='published' order by date desc"
     );
     return rows.map(rowToDevotional);
   }
@@ -101,7 +102,7 @@ export async function getPublishedDevotionals(): Promise<Devotional[]> {
 export async function getDevotionalByDate(date: string): Promise<Devotional | null> {
   if (usePostgres()) {
     const { rows } = await pool().query(
-      "select to_char(date,'YYYY-MM-DD') as date, year, title, key_verse, text, message, prayer_points, prayer_families, status, created_at, updated_at from public.devotionals where date=$1",
+      "select to_char(date,'YYYY-MM-DD') as date, year, title, key_verse, text, message, confession, prayer_points, prayer_families, status, created_at, updated_at from public.devotionals where date=$1",
       [date]
     );
     return rows[0] ? rowToDevotional(rows[0]) : null;
@@ -134,12 +135,13 @@ export async function saveDevotional(dev: Devotional): Promise<void> {
   if (usePostgres()) {
     await pool().query(
       `insert into public.devotionals
-         (date, year, title, key_verse, text, message, prayer_points, prayer_families, status, updated_at)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9, now())
+         (date, year, title, key_verse, text, message, confession, prayer_points, prayer_families, status, updated_at)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, now())
        on conflict (date) do update set
          year=excluded.year, title=excluded.title, key_verse=excluded.key_verse,
-         text=excluded.text, message=excluded.message, prayer_points=excluded.prayer_points,
-         prayer_families=excluded.prayer_families, status=excluded.status, updated_at=now()`,
+         text=excluded.text, message=excluded.message, confession=excluded.confession,
+         prayer_points=excluded.prayer_points, prayer_families=excluded.prayer_families,
+         status=excluded.status, updated_at=now()`,
       [
         dev.date,
         dev.year,
@@ -147,6 +149,7 @@ export async function saveDevotional(dev: Devotional): Promise<void> {
         dev.keyVerse ?? "",
         dev.text ?? "",
         dev.message ?? "",
+        JSON.stringify(dev.confession ?? []),
         JSON.stringify(dev.prayerPoints ?? []),
         JSON.stringify(dev.prayerFamilies ?? []),
         dev.status,

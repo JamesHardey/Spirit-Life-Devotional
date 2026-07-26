@@ -9,6 +9,7 @@ create table if not exists public.devotionals (
   key_verse       text not null default '',
   text            text not null default '',
   message         text not null default '',
+  confession      jsonb not null default '[]'::jsonb, -- "Confession" statements — shown before Prayer Points
   prayer_points   jsonb not null default '[]'::jsonb,
   prayer_families jsonb not null default '[]'::jsonb,
   status          text not null default 'published'
@@ -16,6 +17,9 @@ create table if not exists public.devotionals (
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
+
+-- Added after the table already existed in production — safe to re-run.
+alter table public.devotionals add column if not exists confession jsonb not null default '[]'::jsonb;
 
 create index if not exists devotionals_status_date_idx
   on public.devotionals (status, date desc);

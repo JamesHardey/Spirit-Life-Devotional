@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
     keyVerse: body.keyVerse.trim(),
     text: body.text.trim(),
     message: body.message.trim(),
+    confession: (body.confession || []).map((p) => p.trim()).filter(Boolean),
     prayerPoints: (body.prayerPoints || []).map((p) => p.trim()).filter(Boolean),
     prayerFamilies: (body.prayerFamilies || []).map((p) => p.trim()).filter(Boolean),
     status: body.status === "draft" ? "draft" : "published",

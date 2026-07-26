@@ -51,6 +51,21 @@ export default async function DevotionalReaderPage({
           ))}
         </div>
 
+        {(devotional.confession ?? []).length > 0 && (
+          <div className="mt-8 rounded-2xl bg-brand-flame-500/10 p-4">
+            <h2 className="mb-2 font-serif text-lg font-bold text-content-primary">
+              Confession
+            </h2>
+            <div className="space-y-3">
+              {devotional.confession.map((c, i) => (
+                <p key={i} className="text-[15px] leading-6 text-content-primary/90">
+                  {c}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
         {devotional.prayerPoints.length > 0 && (
           <div className="mt-8">
             <h2 className="font-serif text-lg font-bold text-content-primary">

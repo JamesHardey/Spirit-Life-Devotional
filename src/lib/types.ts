@@ -8,6 +8,7 @@ export interface Devotional {
   keyVerse: string; // e.g. "For God so loved the world — John 3:16"
   text: string; // the scripture reading reference / passage
   message: string; // the main devotional body (plain text, paragraphs split on \n\n)
+  confession: string[]; // "Confession" statements — shown before Prayer Points
   prayerPoints: string[];
   prayerFamilies: string[]; // "Pray for the following Families" — names/birthdays
   status: "published" | "draft";
@@ -22,6 +23,7 @@ export interface DevotionalInput {
   keyVerse: string;
   text: string;
   message: string;
+  confession?: string[];
   prayerPoints: string[];
   prayerFamilies?: string[];
   status?: "published" | "draft";

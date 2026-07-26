@@ -113,6 +113,7 @@ export async function POST(req: NextRequest) {
       keyVerse: d.keyVerse,
       text: d.text,
       message: d.message,
+      confession: d.confession || [],
       prayerPoints: d.prayerPoints,
       prayerFamilies: d.prayerFamilies || [],
       status: d.status === "draft" ? "draft" : "published",
