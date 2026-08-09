@@ -351,3 +351,212 @@ export async function parseDailyRechargeDocx(
 
   return { devotionals, issues, totalBlocks: headingIdx.length };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bulk importer for pasted "Daily Recharge" WhatsApp-broadcast text — the same
+// devotional as above, but pasted directly (no .docx) and with looser, more
+// varied formatting. Each entry looks like:
+//
+//   RECHARGE
+//   31ST JULY 2026                          ← ordinal DAY MONTH YEAR (no weekday)
+//   GUARD YOUR HEART AGAINST...              ← TITLE
+//   Scripture Reading:                       ← citation label — several variants
+//   1 Timothy 6:10 (NKJV)                    ← seen in practice: "Scripture:",
+//   "For the love of money is a root..."     ← "Text:", "Scripture Reading:"/(no colon),
+//                                             ← inline-on-one-line, or no label at all
+//   Devotional Thought                       ← optional — body is collected regardless
+//   <one or more paragraphs>
+//   Key Lessons                              ← optional bullet list (appended to message)
+//   Confession                               ← statements — own field
+//   Prayer                                   ← statements — own field
+//   CHERUB OBADARE / KINDLY SHARE 🙏         ← signature/footer — discarded
+//
+// Unlike parseDevotionalDocx, this operates on paragraph GROUPS (splitting on
+// blank lines, preserving each group's internal line breaks) rather than raw
+// lines, because a label and its content are sometimes on adjacent lines with
+// no blank line between them (e.g. "Confession\nMy heart belongs to God…"),
+// and collapsing to single lines would either merge unrelated content or lose
+// it entirely.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const RECHARGE_MARKER = /^recharge$/i;
+const STOP_MARKER = /^(cherub\s+obadare|kindly\s+share)/i;
+
+const PASTE_LABELS = {
+  scripture: /^(scripture(?:\s+reading)?|text)\s*:?\s*$/i,
+  scriptureInline: /^(scripture(?:\s+reading)?|text)\s*:\s*(.+)$/i,
+  thought: /^devotional\s*thought\s*:?$/i,
+  keyLessons: /^key\s*lessons\s*:?$/i,
+  further: /^further\s*study\s*:?$/i,
+  confession: /^confession\s*:?$/i,
+  prayer: /^prayer\s*:?$/i,
+};
+
+function toParagraphGroups(raw: string): string[][] {
+  return raw
+    .split(/\r?\n\s*\r?\n+/)
+    .map((g) => g.split(/\r?\n/).map((l) => l.trim()).filter(Boolean))
+    .filter((g) => g.length > 0);
+}
+
+// Pulls the quoted verse out of a citation blob regardless of whether the
+// reference comes before or after it, and whatever separator/version-tag
+// surrounds it — e.g. `Ref (VER) "quote"`, `"quote" — Ref (VER)`,
+// `Ref – "quote" (VER)`.
+function splitCitation(combined: string): { text: string; keyVerse: string } {
+  const m = combined.match(/[""]([^""]+)[""]/);
+  if (!m || m.index === undefined) return { text: combined.trim(), keyVerse: combined.trim() };
+  const keyVerse = m[1].trim();
+  const before = combined.slice(0, m.index).trim();
+  const after = combined.slice(m.index + m[0].length).trim();
+  let text = [before, after].filter(Boolean).join(" ").trim();
+  text = text.replace(/^[-–—:]+\s*/, "").replace(/\s*[-–—:]+\s*$/, "");
+  text = text.replace(/\s+[-–—]\s+(?=\()/g, " ");
+  return { text: text.replace(/\s+/g, " ").trim(), keyVerse };
+}
+
+export function parseDailyRechargeText(
+  raw: string,
+  defaultStatus: "published" | "draft" = "published"
+): ImportResult {
+  const groups = toParagraphGroups(raw);
+  const hasMarkers = groups.some((g) => g.length === 1 && RECHARGE_MARKER.test(g[0]));
+
+  // Entries start either right after a "RECHARGE" marker, or (if the paste
+  // omits that marker) at each date heading directly.
+  const entryStarts: number[] = [];
+  groups.forEach((g, i) => {
+    if (hasMarkers) {
+      if (g.length === 1 && RECHARGE_MARKER.test(g[0])) entryStarts.push(i + 1);
+    } else if (g.length === 1 && RECHARGE_DATE_RE.test(g[0])) {
+      entryStarts.push(i);
+    }
+  });
+
+  const devotionals: DevotionalInput[] = [];
+  const issues: string[] = [];
+  const seenDates = new Set<string>();
+
+  for (let e = 0; e < entryStarts.length; e++) {
+    const start = entryStarts[e];
+    const end = e + 1 < entryStarts.length ? entryStarts[e + 1] : groups.length;
+    const entryGroups = groups.slice(start, end);
+
+    const dateIdx = entryGroups.findIndex((g) => g.length === 1 && RECHARGE_DATE_RE.test(g[0]));
+    if (dateIdx === -1) {
+      issues.push(`Entry ${e + 1}: no recognizable date heading, skipped`);
+      continue;
+    }
+    const m = entryGroups[dateIdx][0].match(RECHARGE_DATE_RE)!;
+    const day = parseInt(m[1], 10);
+    const month = RECHARGE_MONTHS[m[2].toLowerCase()];
+    const year = parseInt(m[3], 10);
+    const date = `${year}-${pad2(month)}-${pad2(day)}`;
+
+    const body = entryGroups.slice(dateIdx + 1);
+    let gi = 0;
+    const title = (body[gi] ?? []).join(" ").trim();
+    gi++;
+
+    let text = "";
+    let keyVerse = "";
+    const messageLines: string[] = [];
+    const keyLessonsLines: string[] = [];
+    const furtherLines: string[] = [];
+    const confessionLines: string[] = [];
+    const prayerLines: string[] = [];
+    type Section = "citation-expected" | "thought" | "keyLessons" | "further" | "confession" | "prayer";
+    let section: Section = "citation-expected";
+
+    for (; gi < body.length; gi++) {
+      const g = body[gi];
+      const first = g[0];
+
+      if (STOP_MARKER.test(first)) break;
+
+      if (section === "citation-expected") {
+        let citationLines: string[];
+        const inlineMatch = first.match(PASTE_LABELS.scriptureInline);
+        if (inlineMatch) citationLines = [inlineMatch[2], ...g.slice(1)];
+        else if (PASTE_LABELS.scripture.test(first)) citationLines = g.slice(1);
+        else citationLines = g;
+
+        const split = splitCitation(citationLines.join(" ").trim());
+        text = split.text;
+        keyVerse = split.keyVerse;
+        section = "thought";
+        continue;
+      }
+
+      const trailing = g.slice(1).join(" ").trim();
+      if (PASTE_LABELS.thought.test(first)) {
+        section = "thought";
+        if (trailing) messageLines.push(trailing);
+        continue;
+      }
+      if (PASTE_LABELS.keyLessons.test(first)) {
+        section = "keyLessons";
+        if (trailing) keyLessonsLines.push(trailing.replace(/^-+\s*/, ""));
+        continue;
+      }
+      if (PASTE_LABELS.further.test(first)) {
+        section = "further";
+        if (trailing) furtherLines.push(trailing);
+        continue;
+      }
+      if (PASTE_LABELS.confession.test(first)) {
+        section = "confession";
+        if (trailing) confessionLines.push(trailing);
+        continue;
+      }
+      if (PASTE_LABELS.prayer.test(first)) {
+        section = "prayer";
+        if (trailing) prayerLines.push(trailing);
+        continue;
+      }
+
+      const joined = g.join(" ").trim();
+      if (section === "thought") messageLines.push(joined);
+      else if (section === "keyLessons") keyLessonsLines.push(joined.replace(/^-+\s*/, ""));
+      else if (section === "further") furtherLines.push(joined);
+      else if (section === "confession") confessionLines.push(joined);
+      else if (section === "prayer") prayerLines.push(joined);
+    }
+
+    let message = messageLines.join("\n\n").trim();
+    if (keyLessonsLines.length) {
+      message += `${message ? "\n\n" : ""}Key Lessons: ${keyLessonsLines.join(" ")}`;
+    }
+    if (furtherLines.length) {
+      message += `${message ? "\n\n" : ""}Further Study: ${furtherLines.join(" ")}`;
+    }
+
+    if (!title) {
+      issues.push(`${date} — missing title, skipped`);
+      continue;
+    }
+    if (!message && !keyVerse) {
+      issues.push(`${date} "${title}" — no body or key verse, skipped`);
+      continue;
+    }
+    if (seenDates.has(date)) {
+      issues.push(`${date} "${title}" — duplicate date in paste, kept first occurrence`);
+      continue;
+    }
+    seenDates.add(date);
+
+    devotionals.push({
+      date,
+      title,
+      keyVerse,
+      text,
+      message,
+      confession: confessionLines,
+      prayerPoints: prayerLines,
+      prayerFamilies: [],
+      status: defaultStatus,
+    });
+  }
+
+  return { devotionals, issues, totalBlocks: entryStarts.length };
+}

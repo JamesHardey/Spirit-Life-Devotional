@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Devotional } from "@/lib/types";
 import { formatDateLong, localISO } from "@/lib/date";
 import { BulkUpload } from "./BulkUpload";
+import { PasteImport } from "./PasteImport";
 
 const EMPTY = {
   date: localISO(),
@@ -316,6 +317,9 @@ export function AdminDashboard({
           )}
         </div>
       </form>
+
+      {/* ── Paste from WhatsApp ── */}
+      <PasteImport onImported={refresh} />
 
       {/* ── Bulk upload ── */}
       <BulkUpload onImported={refresh} />
