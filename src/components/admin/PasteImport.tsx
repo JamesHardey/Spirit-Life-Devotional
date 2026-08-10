@@ -60,7 +60,7 @@ export function PasteImport({ onImported }: { onImported: () => void }) {
   };
 
   const inputCls =
-    "w-full rounded-xl border border-white/10 bg-surface-input px-4 py-3 text-sm text-content-primary focus:border-brand-purple-500 focus:outline-none";
+    "w-full rounded-xl border border-white/10 bg-surface-input px-4 py-3 text-sm text-content-primary focus:border-brand-amber-500 focus:outline-none";
 
   return (
     <div className="mt-6 rounded-3xl border border-white/5 bg-surface-card p-5">
@@ -99,14 +99,14 @@ export function PasteImport({ onImported }: { onImported: () => void }) {
           <button
             onClick={() => send(true)}
             disabled={busy !== null}
-            className="rounded-xl border border-brand-purple-600 px-4 py-2.5 text-sm font-semibold text-brand-purple-300 disabled:opacity-50"
+            className="rounded-xl border border-brand-amber-600 px-4 py-2.5 text-sm font-semibold text-brand-amber-300 disabled:opacity-50"
           >
             {busy === "preview" ? "Reading…" : "Preview"}
           </button>
           <button
             onClick={() => send(false)}
             disabled={busy !== null}
-            className="rounded-xl bg-brand-purple-700 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="rounded-xl bg-brand-amber-700 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {busy === "import" ? "Importing…" : "Import now"}
           </button>
@@ -117,7 +117,7 @@ export function PasteImport({ onImported }: { onImported: () => void }) {
         {result && (
           <div className="rounded-xl bg-surface-input/60 p-3 text-sm">
             {result.dryRun ? (
-              <p className="font-semibold text-brand-purple-300">
+              <p className="font-semibold text-brand-amber-300">
                 Preview: found {result.parsed} devotional(s) across {result.totalDays} date
                 heading(s). Nothing saved yet.
               </p>

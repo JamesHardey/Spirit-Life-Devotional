@@ -58,7 +58,7 @@ export function InstallPrompt() {
   if (dismissed || (!deferred && !showIosHint)) return null;
 
   return (
-    <div className="mx-5 mb-5 flex items-start gap-3 rounded-2xl border border-brand-purple-700/40 bg-brand-purple-950/60 p-4">
+    <div className="mx-5 mb-5 flex items-start gap-3 rounded-2xl border border-brand-amber-700/40 bg-brand-amber-950/60 p-4">
       <span className="text-2xl" aria-hidden>
         📲
       </span>
@@ -76,7 +76,7 @@ export function InstallPrompt() {
         {deferred && (
           <button
             onClick={install}
-            className="mt-2 rounded-lg bg-brand-purple-700 px-3 py-1.5 text-xs font-semibold text-white"
+            className="mt-2 rounded-lg bg-brand-amber-700 px-3 py-1.5 text-xs font-semibold text-white"
           >
             Install
           </button>

@@ -50,7 +50,7 @@ export function StreakCard() {
         <div className="flex items-center gap-2">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-input">
             <div
-              className="h-full rounded-full bg-brand-purple-700 transition-all duration-500"
+              className="h-full rounded-full bg-brand-amber-700 transition-all duration-500"
               style={{ width: `${percentage}%` }}
             />
           </div>

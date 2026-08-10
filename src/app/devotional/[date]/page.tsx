@@ -20,7 +20,7 @@ export default async function DevotionalReaderPage({
   return (
     <div className="mx-auto max-w-lg pb-16">
       <article className="px-5 pt-6">
-        <p className="text-xs font-medium uppercase tracking-widest text-brand-purple-400">
+        <p className="text-xs font-medium uppercase tracking-widest text-brand-amber-400">
           Daily Devotional
         </p>
         <h1 className="mt-2 font-serif text-3xl font-bold leading-tight text-content-primary">
@@ -36,8 +36,8 @@ export default async function DevotionalReaderPage({
           </p>
         )}
 
-        <div className="mt-5 rounded-2xl bg-brand-purple-950/60 p-4">
-          <p className="mb-1 text-xs font-semibold text-brand-purple-300">Key Verse</p>
+        <div className="mt-5 rounded-2xl bg-brand-amber-950/60 p-4">
+          <p className="mb-1 text-xs font-semibold text-brand-amber-300">Key Verse</p>
           <p className="font-serif text-base leading-6 text-content-primary">
             {devotional.keyVerse}
           </p>

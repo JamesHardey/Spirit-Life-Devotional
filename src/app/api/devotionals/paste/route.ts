@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthed } from "@/lib/auth";
 import { parseDailyRechargeText } from "@/lib/docxImport";
-import { saveDevotional } from "@/lib/db";
+import { getDevotionalByDate, saveDevotional } from "@/lib/db";
+import { notifyLatestOfBatch } from "@/lib/push";
 import type { Devotional } from "@/lib/types";
 
 // POST /api/devotionals/paste  { text, status?, dryRun? }
@@ -66,7 +67,12 @@ export async function POST(req: NextRequest) {
 
   const now = new Date().toISOString();
   let imported = 0;
+  const newlyPublished: { date: string; title: string }[] = [];
   for (const d of parsed.devotionals) {
+    const nextStatus = d.status === "draft" ? "draft" : "published";
+    const existing = await getDevotionalByDate(d.date);
+    const wasAlreadyPublished = existing?.status === "published";
+
     const devotional: Devotional = {
       id: d.date,
       date: d.date,
@@ -78,13 +84,19 @@ export async function POST(req: NextRequest) {
       confession: d.confession || [],
       prayerPoints: d.prayerPoints,
       prayerFamilies: d.prayerFamilies || [],
-      status: d.status === "draft" ? "draft" : "published",
+      status: nextStatus,
       createdAt: now,
       updatedAt: now,
     };
     await saveDevotional(devotional);
     imported++;
+
+    if (nextStatus === "published" && !wasAlreadyPublished) {
+      newlyPublished.push({ date: d.date, title: d.title });
+    }
   }
+
+  await notifyLatestOfBatch(newlyPublished);
 
   return NextResponse.json({
     status: "success",

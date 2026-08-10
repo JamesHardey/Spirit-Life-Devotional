@@ -101,8 +101,8 @@ export function CalendarBrowser({ availableDates }: { availableDates: string[] }
                   onClick={() => router.push(`/devotional/${date}`)}
                   className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-medium transition active:scale-90 ${
                     isToday
-                      ? "bg-brand-purple-700 text-white"
-                      : "bg-brand-purple-950 text-content-primary hover:bg-brand-purple-900"
+                      ? "bg-brand-amber-700 text-white"
+                      : "bg-brand-amber-950 text-content-primary hover:bg-brand-amber-900"
                   }`}
                 >
                   {day}
@@ -111,7 +111,7 @@ export function CalendarBrowser({ availableDates }: { availableDates: string[] }
                 <div
                   className={`flex h-9 w-9 items-center justify-center rounded-full text-sm ${
                     isToday
-                      ? "border border-brand-purple-700 text-content-muted"
+                      ? "border border-brand-amber-700 text-content-muted"
                       : "text-content-muted/50"
                   }`}
                 >
@@ -125,7 +125,7 @@ export function CalendarBrowser({ availableDates }: { availableDates: string[] }
 
       <div className="mt-4 flex items-center gap-4 border-t border-white/5 pt-3">
         <div className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-brand-purple-950" />
+          <span className="h-3 w-3 rounded-full bg-brand-amber-950" />
           <span className="text-xs text-content-muted">Available</span>
         </div>
         <div className="flex items-center gap-1.5">

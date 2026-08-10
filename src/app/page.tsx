@@ -36,7 +36,7 @@ export default async function HomePage() {
             className="flex items-center justify-between rounded-2xl border border-white/5 bg-surface-card p-4"
           >
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-purple-950 text-lg">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-amber-950 text-lg">
                 📚
               </span>
               <span className="text-sm font-semibold text-content-primary">

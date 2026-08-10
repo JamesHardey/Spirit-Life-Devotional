@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export function AdminLogin() {
   const router = useRouter();
@@ -30,9 +31,13 @@ export function AdminLogin() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6">
       <div className="mb-6 text-center">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-purple-700 to-brand-purple-900 text-2xl">
-          🔥
-        </div>
+        <Image
+          src="/icons/icon-192.png"
+          alt="The Spirit Life C. & S. Church"
+          width={56}
+          height={56}
+          className="mx-auto mb-3 h-14 w-14 rounded-full"
+        />
         <h1 className="font-serif text-2xl font-bold text-content-primary">Admin Access</h1>
         <p className="mt-1 text-sm text-content-secondary">
           Sign in to manage daily devotionals.
@@ -45,14 +50,14 @@ export function AdminLogin() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Admin password"
-          className="w-full rounded-xl border border-white/10 bg-surface-input px-4 py-3 text-content-primary placeholder:text-content-muted focus:border-brand-purple-500 focus:outline-none"
+          className="w-full rounded-xl border border-white/10 bg-surface-input px-4 py-3 text-content-primary placeholder:text-content-muted focus:border-brand-amber-500 focus:outline-none"
           autoFocus
         />
         {error && <p className="text-sm text-brand-flame-400">{error}</p>}
         <button
           type="submit"
           disabled={busy || !password}
-          className="w-full rounded-xl bg-brand-purple-700 py-3 font-semibold text-white disabled:opacity-50"
+          className="w-full rounded-xl bg-brand-amber-700 py-3 font-semibold text-white disabled:opacity-50"
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>

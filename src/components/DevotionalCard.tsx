@@ -31,7 +31,7 @@ export function DevotionalCard({
     >
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-purple-950">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-amber-950">
             <span aria-hidden>📖</span>
           </span>
           <span className="text-xs font-medium uppercase tracking-widest text-content-secondary">
@@ -52,15 +52,15 @@ export function DevotionalCard({
         {formatDateLong(devotional.date)}
       </p>
 
-      <div className="rounded-2xl bg-brand-purple-950/60 p-3">
-        <p className="mb-1 text-xs font-semibold text-brand-purple-300">Key Verse</p>
+      <div className="rounded-2xl bg-brand-amber-950/60 p-3">
+        <p className="mb-1 text-xs font-semibold text-brand-amber-300">Key Verse</p>
         <p className="font-serif text-sm leading-5 text-content-primary line-clamp-3">
           {devotional.keyVerse}
         </p>
       </div>
 
       <div className="mt-3 flex items-center justify-end">
-        <span className="text-sm font-semibold text-brand-purple-400">Read more →</span>
+        <span className="text-sm font-semibold text-brand-amber-400">Read more →</span>
       </div>
     </Link>
   );

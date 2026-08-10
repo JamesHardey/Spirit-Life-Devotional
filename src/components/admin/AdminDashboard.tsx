@@ -149,7 +149,7 @@ export function AdminDashboard({
   };
 
   const inputCls =
-    "w-full rounded-xl border border-white/10 bg-surface-input px-4 py-3 text-sm text-content-primary placeholder:text-content-muted focus:border-brand-purple-500 focus:outline-none";
+    "w-full rounded-xl border border-white/10 bg-surface-input px-4 py-3 text-sm text-content-primary placeholder:text-content-muted focus:border-brand-amber-500 focus:outline-none";
 
   return (
     <div className="mx-auto min-h-dvh max-w-2xl px-5 pb-16">
@@ -306,7 +306,7 @@ export function AdminDashboard({
           <button
             type="submit"
             disabled={busy}
-            className="rounded-xl bg-brand-purple-700 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+            className="rounded-xl bg-brand-amber-700 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
           >
             {busy ? "Saving…" : editing ? "Update devotional" : "Publish devotional"}
           </button>
@@ -328,7 +328,10 @@ export function AdminDashboard({
       <div className="mt-6 rounded-3xl border border-white/5 bg-surface-card p-5">
         <h2 className="font-serif text-lg font-bold text-content-primary">Notifications</h2>
         <p className="mt-1 text-sm text-content-secondary">
-          Push the latest devotional to all subscribed devices.
+          A push is sent automatically whenever a devotional is newly published — via this
+          form, a bulk upload, or a WhatsApp paste (for a multi-day batch, just one
+          notification goes out, for the latest date). Use the button below only to manually
+          re-send or nudge subscribers outside of that.
         </p>
         {!pushConfigured && (
           <p className="mt-2 text-xs text-brand-flame-400">
@@ -374,7 +377,7 @@ export function AdminDashboard({
                 <button
                   onClick={() => edit(d)}
                   disabled={deletingDate === d.date}
-                  className="text-sm text-brand-purple-400 disabled:opacity-50"
+                  className="text-sm text-brand-amber-400 disabled:opacity-50"
                 >
                   Edit
                 </button>

@@ -54,7 +54,7 @@ export function NotificationToggle() {
   return (
     <div className="mx-5 mb-6 rounded-2xl border border-white/5 bg-surface-card p-4">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-purple-950 text-lg">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-amber-950 text-lg">
           🔔
         </span>
         <div className="flex-1">
@@ -67,7 +67,7 @@ export function NotificationToggle() {
           onClick={toggle}
           disabled={busy}
           className={`relative h-7 w-12 rounded-full transition-colors ${
-            enabled ? "bg-brand-purple-600" : "bg-surface-input"
+            enabled ? "bg-brand-amber-600" : "bg-surface-input"
           } disabled:opacity-50`}
           aria-pressed={enabled}
           aria-label="Toggle daily reminders"

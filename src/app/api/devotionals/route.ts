@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllDevotionals, getPublishedDevotionals, saveDevotional } from "@/lib/db";
+import { getAllDevotionals, getDevotionalByDate, getPublishedDevotionals, saveDevotional } from "@/lib/db";
 import { isAdminAuthed } from "@/lib/auth";
 import { isValidISODate } from "@/lib/date";
+import { broadcastNotification } from "@/lib/push";
 import type { Devotional, DevotionalInput } from "@/lib/types";
 
 // GET /api/devotionals            → published devotionals (public)
@@ -35,6 +36,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "error", message: errors.join("; ") }, { status: 400 });
   }
 
+  // Was this date already published before this save? Only a fresh
+  // publish (new date, or a draft flipping to published) should notify —
+  // a routine edit to already-published content shouldn't re-ping readers.
+  const existing = await getDevotionalByDate(body.date);
+  const wasAlreadyPublished = existing?.status === "published";
+
   const now = new Date().toISOString();
   const devotional: Devotional = {
     id: body.date, // date is the natural unique id (one per day)
@@ -53,6 +60,15 @@ export async function POST(req: NextRequest) {
   };
 
   await saveDevotional(devotional);
+
+  if (devotional.status === "published" && !wasAlreadyPublished) {
+    broadcastNotification({
+      title: "New Devotional",
+      body: devotional.title,
+      url: `/devotional/${devotional.date}`,
+    }).catch(() => {});
+  }
+
   return NextResponse.json({ status: "success", data: devotional }, { status: 201 });
 }
 

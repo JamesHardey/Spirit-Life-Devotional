@@ -1,18 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { AppHeader } from "@/components/AppHeader";
 
+// Inter only — matches spiritlifecns.com, which uses Inter for both body
+// text and headings (no separate serif). tailwind.config.ts points the
+// `font-serif` utility at this same font so heading classNames don't need renaming.
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
-});
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
   display: "swap",
 });
 
@@ -33,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0F0A1E",
+  themeColor: "#0A0E14",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -48,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfair.variable} dark`}
+      className={`${inter.variable} dark`}
       suppressHydrationWarning
     >
       {/* suppressHydrationWarning: browser extensions (e.g. Liner) inject

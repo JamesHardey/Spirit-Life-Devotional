@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 // Persistent app-bar. Lives outside the scroll area (see layout.tsx), so it
 // stays fixed at the top while the content below scrolls — the native-app feel.
@@ -41,11 +42,14 @@ export function AppHeader() {
         )}
 
         <Link href="/" className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-purple-700 to-brand-purple-900 shadow-lg shadow-brand-purple-950/50">
-            <span className="text-lg" aria-hidden>
-              🔥
-            </span>
-          </span>
+          <Image
+            src="/icons/icon-192.png"
+            alt="The Spirit Life C. & S. Church"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-full"
+            priority
+          />
           <span className="leading-tight">
             <span className="block font-serif text-lg font-bold text-content-primary">
               SpiritLife

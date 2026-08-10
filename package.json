@@ -9,7 +9,6 @@
     "start": "next start",
     "lint": "next lint",
     "generate-vapid": "node scripts/generate-vapid.mjs",
-    "generate-icons": "node scripts/generate-icons.mjs",
     "generate-template": "node scripts/generate-template.mjs",
     "migrate": "node scripts/migrate-supabase.mjs"
   },

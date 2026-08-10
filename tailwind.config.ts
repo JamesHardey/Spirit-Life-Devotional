@@ -1,6 +1,10 @@
 import type { Config } from "tailwindcss";
 
-// Palette + type mirror the SpiritLife mobile app (see SpiritLife/tailwind.config.js)
+// Palette + type matched directly against the live spiritlifecns.com site
+// (dark navy surfaces, amber #F59E0B primary accent, Inter throughout).
+// The logo itself (globe + flame + open book) keeps its purple/orange —
+// see public/icons/ — but the app's UI chrome mirrors the real site's
+// neutral-navy + amber product palette, not the logo's own colors.
 const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   darkMode: "class",
@@ -8,18 +12,18 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          purple: {
-            50: "#faf5ff",
-            100: "#f3e8ff",
-            200: "#e9d5ff",
-            300: "#d8b4fe",
-            400: "#c084fc",
-            500: "#a855f7",
-            600: "#9333ea",
-            700: "#7c3aed",
-            800: "#6b21a8",
-            900: "#581c87",
-            950: "#3b0764",
+          amber: {
+            50: "#fffbeb",
+            100: "#fef3c7",
+            200: "#fde68a",
+            300: "#fcd34d",
+            400: "#fbbf24",
+            500: "#f59e0b",
+            600: "#d97706",
+            700: "#b45309",
+            800: "#92400e",
+            900: "#78350f",
+            950: "#451a03",
           },
           flame: {
             50: "#fff7ed",
@@ -35,19 +39,19 @@ const config: Config = {
           },
         },
         surface: {
-          dark: "#0F0A1E",
-          card: "#1A1030",
-          input: "#231840",
+          dark: "#0A0E14",
+          card: "#131A22",
+          input: "#1B2430",
         },
         content: {
-          primary: "#F8F4FF",
-          secondary: "#C4B5D6",
-          muted: "#7B6A90",
+          primary: "#FFFFFF",
+          secondary: "#B4BEC9",
+          muted: "#6B7684",
         },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        serif: ["var(--font-playfair)", "Georgia", "serif"],
+        serif: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
     },
   },
