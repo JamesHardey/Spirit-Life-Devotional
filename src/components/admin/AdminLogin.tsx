@@ -31,13 +31,15 @@ export function AdminLogin() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6">
       <div className="mb-6 text-center">
-        <Image
-          src="/icons/icon-192.png"
-          alt="The Spirit Life C. & S. Church"
-          width={56}
-          height={56}
-          className="mx-auto mb-3 h-14 w-14 rounded-full"
-        />
+        <span className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white p-1.5 shadow-sm">
+          <Image
+            src="/icons/icon-192.png"
+            alt="The Spirit Life C. & S. Church"
+            width={48}
+            height={48}
+            className="h-full w-full rounded-full object-contain"
+          />
+        </span>
         <h1 className="font-serif text-2xl font-bold text-content-primary">Admin Access</h1>
         <p className="mt-1 text-sm text-content-secondary">
           Sign in to manage daily devotionals.

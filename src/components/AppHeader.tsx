@@ -42,14 +42,16 @@ export function AppHeader() {
         )}
 
         <Link href="/" className="flex items-center gap-3">
-          <Image
-            src="/icons/icon-192.png"
-            alt="The Spirit Life C. & S. Church"
-            width={36}
-            height={36}
-            className="h-9 w-9 rounded-full"
-            priority
-          />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white p-1 shadow-sm">
+            <Image
+              src="/icons/icon-192.png"
+              alt="The Spirit Life C. & S. Church"
+              width={32}
+              height={32}
+              className="h-full w-full rounded-full object-contain"
+              priority
+            />
+          </span>
           <span className="leading-tight">
             <span className="block font-serif text-lg font-bold text-content-primary">
               SpiritLife
